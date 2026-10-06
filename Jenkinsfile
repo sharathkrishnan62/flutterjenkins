@@ -1,43 +1,41 @@
 pipeline {
-    agent {
-        docker {
-            image 'ghcr.io/cirruslabs/flutter:stable'
-            // Maps the Gradle/Pub caches to persist between runs
-            args '-u root -v /tmp/.gradle:/root/.gradle -v /tmp/.pub-cache:/root/.pub-cache'
-        }
+    agent any
+
+    environment {
+        // Runs commands inside an official Flutter container using your local Docker daemon
+        DOCKER_CMD = "docker run --rm -v ${WORKSPACE}:/app -w /app ghcr.io/cirruslabs/flutter:stable"
     }
 
     stages {
         stage('Environment Check') {
             steps {
-                sh 'flutter --version'
-                sh 'flutter doctor -v'
+                sh "${DOCKER_CMD} flutter --version"
+                sh "${DOCKER_CMD} flutter doctor -v"
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                sh 'flutter clean'
-                sh 'flutter pub get'
+                sh "${DOCKER_CMD} flutter clean"
+                sh "${DOCKER_CMD} flutter pub get"
             }
         }
 
         stage('Analyze & Lint') {
             steps {
-                sh 'flutter analyze'
+                sh "${DOCKER_CMD} flutter analyze"
             }
         }
 
         stage('Test') {
             steps {
-                sh 'flutter test'
+                sh "${DOCKER_CMD} flutter test"
             }
         }
 
         stage('Build') {
             steps {
-                // If building an APK:
-                sh 'flutter build apk --release'
+                sh "${DOCKER_CMD} flutter build apk --release"
             }
         }
 
